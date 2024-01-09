@@ -10,23 +10,6 @@ const MapComponent: React.FC = () => {
     const [generatedGoal, setGeneratedGoal] = useState(false); // Track if the goal is generated
 
     useEffect(() => {
-        // Get the goal position from the backend only once
-        if (!generatedGoal) {
-            axios.get('http://localhost:3000/api/goals/generateGoal', {
-                params: {
-                    currentLat: ballPos[0],  // Lat
-                    currentLng: ballPos[1]   // Long
-                }
-            })
-                .then(response => {
-                    setGoalPos([response.data.lat, response.data.lng]);
-                    setGeneratedGoal(true); // Mark the goal as generated
-                })
-                .catch(error => {
-                    console.error('Error fetching goal position:', error);
-                });
-        }
-
         // Get the user's current location
         navigator.geolocation.getCurrentPosition(
             position => {
@@ -36,7 +19,26 @@ const MapComponent: React.FC = () => {
                 console.error('Error getting current position:', error);
             }
         );
-    }, [ballPos, goalPos, setBallPos, setGoalPos, generatedGoal]);
+    }, [setBallPos]);
+
+    useEffect(() => {
+        // Generate the goal position only once when it's not generated
+        if (!generatedGoal) {
+            axios.get('http://localhost:3000/api/goals/generateGoal', {
+                params: {
+                    currentLat: ballPos[0],  // Lat
+                    currentLng: ballPos[1]   // Long
+                }
+            })
+            .then(response => {
+                setGoalPos([response.data.lat, response.data.lng]);
+                setGeneratedGoal(true); // Mark the goal as generated
+            })
+            .catch(error => {
+                console.error('Error fetching goal position:', error);
+            });
+        }
+    }, [ballPos, setGoalPos, generatedGoal]);
 
     return (
         <MapContainer center={ballPos} zoom={13} style={{ height: '100vh', width: '100%' }}>
